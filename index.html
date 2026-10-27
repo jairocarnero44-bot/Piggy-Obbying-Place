@@ -628,13 +628,9 @@ let globalPacksCache = [];
 
                         // CONTROL DE REGISTRO Y LOGIN DE USUARIOS CORREGIDO
 async function handleUserLogin() {
-    const input = document.getElementById('usernameInput').value.trim().toUpperCase();
-    const errEl = document.getElementById('authError');
-    errEl.classList.add('hidden');
-
-    if (!input || input.length < 3) {
-        errEl.innerText = "El nombre de usuario debe contener al menos 3 caracteres.";
-        errEl.classList.remove('hidden');
+    const input = document.getElementById('auth-username').value.trim();
+const errEl = document.getElementById('auth-error-output');
+errEl.innerText = '';
         return;
     }
 
@@ -683,9 +679,13 @@ async function handleUserLogin() {
 
 // CONTROL DE ACCESO ADMINISTRADOR CORREGIDO
 function handleAdminLogin() {
-    const pwd = document.getElementById('adminPasswordInput').value.trim();
+    const input = document.getElementById('usernameInput').value.trim().toUpperCase();
     const errEl = document.getElementById('authError');
     errEl.classList.add('hidden');
+
+    if (!input || input.length < 3) {
+        errEl.innerText = "El nombre de usuario debe contener al menos 3 caracteres.";
+        errEl.classList.remove('hidden');
 
     if (pwd === 'admin123') {
         isAdminSession = true;
