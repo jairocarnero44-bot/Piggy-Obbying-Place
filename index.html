@@ -626,47 +626,79 @@ let globalPacksCache = [];
             }
         }
 
-        async function handleUserLogin() {
-            const inputName = document.getElementById('auth-username').value.trim();
-            const errorLabel = document.getElementById('auth-error-output');
-            errorLabel.innerText = '';
+                        // CONTROL DE REGISTRO Y LOGIN DE USUARIOS CORREGIDO
+async function handleUserLogin() {
+    const input = document.getElementById('usernameInput').value.trim().toUpperCase();
+    const errEl = document.getElementById('authError');
+    errEl.classList.add('hidden');
 
-            if (!inputName) return errorLabel.innerText = 'Por favor ingresa un nombre.';
-            if (inputName.toLowerCase() === 'administrador') return errorLabel.innerText = 'Nombre reservado del sistema.';
+    if (!input || input.length < 3) {
+        errEl.innerText = "El nombre de usuario debe contener al menos 3 caracteres.";
+        errEl.classList.remove('hidden');
+        return;
+    }
 
-            try {
-                const { data: existingUser, error } = await supabase.from('users').select('*').eq('username', inputName).maybeSingle();
-                if (existingUser) {
-                    currentUser = existingUser;
-                } else {
-                    const { data: newUser, error: createError } = await supabase.from('users').insert([{ username: inputName, player_exp: 0, builder_exp: 0, cleared_obbies: [], hardest_obby: 'Ninguno' }]).select().single();
-                    if (createError) return errorLabel.innerText = 'El nombre de usuario ya está registrado o en uso.';
-                    currentUser = newUser;
-                }
-                isAdminSession = false;
-                localStorage.setItem('pop_session_user', currentUser.username);
-                localStorage.setItem('pop_session_is_admin', 'false');
-                await synchronizeSystemDatasets();
-                launchAppWorkspace();
-            } catch(e) {
-                errorLabel.innerText = 'Error al verificar disponibilidad.';
-            }
+    try {
+        // Consultar de forma segura si el usuario existe en Supabase
+        const { data, error } = await supabaseClient
+            .from('users')
+            .select('*')
+            .eq('username', input);
+
+        if (error) {
+            console.log("Configurando primer acceso...");
         }
 
-        async function handleAdminLogin() {
-            const pass = document.getElementById('auth-password').value;
-            const errorLabel = document.getElementById('auth-error-output');
-            if (pass === 'admin123') {
-                isAdminSession = true;
-                currentUser = { username: 'Administrador' };
-                localStorage.setItem('pop_session_is_admin', 'true');
-                localStorage.setItem('pop_session_user', 'Administrador');
-                await synchronizeSystemDatasets();
-                launchAppWorkspace();
-            } else {
-                errorLabel.innerText = 'Credencial de administración inválida.';
+        if (data && data.length > 0) {
+            // El usuario existe, se loguea directamente recordando sesión
+            currentUser = { username: data[0].username };
+            isAdminSession = false;
+            localStorage.setItem('piggy_session_user', data[0].username);
+            localStorage.removeItem('piggy_session_admin');
+            showMainInterface();
+        } else {
+            // Registrar nuevo perfil de forma limpia en la nube
+            const { error: insErr } = await supabaseClient.from('users').insert([
+                { username: input, player_exp: 0, builder_exp: 0, cleared_obbies: '[]', hardest_obby: 'Ninguno' }
+            ]);
+
+            if (insErr) {
+                errEl.innerText = "Este nombre ya está registrado por otro jugador.";
+                errEl.classList.remove('hidden');
+                return;
             }
+
+            currentUser = { username: input };
+            isAdminSession = false;
+            localStorage.setItem('piggy_session_user', input);
+            localStorage.removeItem('piggy_session_admin');
+            await syncGlobalDatabase();
+            showMainInterface();
         }
+    } catch (e) {
+        errEl.innerText = "Fallo en la comunicación con el servidor.";
+        errEl.classList.remove('hidden');
+    }
+}
+
+// CONTROL DE ACCESO ADMINISTRADOR CORREGIDO
+function handleAdminLogin() {
+    const pwd = document.getElementById('adminPasswordInput').value.trim();
+    const errEl = document.getElementById('authError');
+    errEl.classList.add('hidden');
+
+    if (pwd === 'admin123') {
+        isAdminSession = true;
+        currentUser = { username: 'ADMINISTRADOR' };
+        localStorage.setItem('piggy_session_admin', 'true');
+        localStorage.removeItem('piggy_session_user');
+        showMainInterface();
+    } else {
+        errEl.innerText = "Credencial de Administrador Incorrecta.";
+        errEl.classList.remove('hidden');
+    }
+}
+
 
         function terminateSession() {
             localStorage.removeItem('pop_session_user');
