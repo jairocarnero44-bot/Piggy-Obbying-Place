@@ -587,7 +587,7 @@ let globalPacksCache = [];
 
         function initializeSupabaseClient(url, key) {
             try {
-                supabase = supabase.createClient(url, key);
+                supabase = window.supabase.createClient(url, key);
                 document.getElementById('config-overlay').style.display = 'none';
                 document.getElementById('auth-screen').style.display = 'flex';
                 checkSessionRecovery();
