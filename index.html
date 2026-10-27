@@ -539,15 +539,21 @@
 
     <!-- JAVASCRIPT APP ARCHITECTURE SYSTEM ENGINE -->
     <script>
-        let supabase = null;
-        let currentUser = null;
-        let isAdminSession = false;
+        // CONEXIÓN OFICIAL EN LA NUBE INTEGRADA
+const SUPABASE_URL = "https://supabase.com";
+const SUPABASE_ANON_KEY = "sb_publishable_Dnt_eB1EEI1_YQ_vKVa11Q_2cFzMu6g";
 
-        // Global cache structures
-        let globalUsersCache = [];
-        let globalObbiesCache = [];
-        let globalSubmissionsCache = [];
-        let globalPacksCache = [];
+// Inicialización nativa del cliente
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+let currentUser = null;
+let isAdminSession = false;
+
+// Estructuras de Memoria Caché Sincronizada
+let globalUsersCache = [];
+let globalObbiesCache = [];
+let globalSubmissionsCache = [];
+let globalPacksCache = [];
 
         // Quality value map to build exp for creators
         const QUALITY_EXP_WEIGHT = {
